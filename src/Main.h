@@ -7,4 +7,6 @@
 #include "SPIFFS.h"
 #include "config.h"
 #include "Graphics/Colors.h"
-
+#include "Graphics/TFTHelper.h"
+#include "Core/SerialLogger.h"
+#include "Screens/TestScreen.h"

@@ -1,6 +1,4 @@
 #include "Main.h"
-#include "SerialLogger.h"
-#include "TestScreen.h"
 
 TTGOClass *core = nullptr;
 SerialLogger *logger = nullptr;
@@ -16,18 +14,18 @@ void setup()
     core = TTGOClass::getWatch();
 
     core->begin();
+    core->tft->init();
+    TFTHelper::Init(core->tft);
     core->openBL();
     core->setBrightness(255);
     core->bl->adjust(SCREEN_BRIGHTNESS);
-
-    core->tft->init();
 
     core->power->adc1Enable(AXP202_VBUS_VOL_ADC1 | AXP202_VBUS_CUR_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_BATT_VOL_ADC1, true);
     core->power->setChargeControlCur(1800);
     core->power->clearIRQ();
 
     core->motor_begin();
-    currentScreen = new TestScreen(core,logger);
+    currentScreen = new TestScreen(core, logger);
     currentScreen->SetActive(true);
 }
 

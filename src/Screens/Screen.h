@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "LilyGoWatch.h"
 #include "Config.h"
-#include "Logger.h"
+#include "Core/Logger.h"
 
 class Screen
 {
