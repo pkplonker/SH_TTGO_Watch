@@ -1,8 +1,9 @@
 #include "screen.h"
 
-Screen::Screen(TTGOClass *core, Logger* logger)
+Screen::Screen(TTGOClass *watch, Logger *logger)
 {
-    this->core = core;
+    this->watch = watch;
     this->logger = logger;
     logger->LogTrace("Contructed Screen");
+    watch->tft->init();
 }

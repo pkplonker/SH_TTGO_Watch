@@ -6,7 +6,5 @@
 class TestScreen : public Screen
 {
 public:
-    TestScreen(TTGOClass *core, Logger *logger);
-    virtual void Update() override;
-    virtual void SetActive(bool state);
+    TestScreen(TTGOClass *watch, Logger *logger);
 };

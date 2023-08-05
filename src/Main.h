@@ -5,6 +5,9 @@
 #include <JPEGDecoder.h>
 #include "WiFi.h"
 #include "SPIFFS.h"
+#include "esp_task_wdt.h"
+
+
 #include "config.h"
 #include "Graphics/Colors.h"
 #include "Graphics/TFTHelper.h"

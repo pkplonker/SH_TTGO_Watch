@@ -3,7 +3,7 @@
 
 TFT_eSPI *TFTHelper::tft = nullptr;
 
-void TFTHelper::WriteTextWithBackground(const String &text, int32_t x, int32_t y, uint8_t fontSize, int32_t color)
+void TFTHelper::WriteTextWithBackgroundAlpha(const String &text, int32_t x, int32_t y, uint8_t fontSize, int32_t color)
 {
     tft->setTextFont(fontSize);
     tft->textcolor = color;
