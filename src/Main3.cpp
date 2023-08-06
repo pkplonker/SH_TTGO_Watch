@@ -6,34 +6,28 @@
 
 #include "config.h"
 
-
-
 void setup()
 {
     Serial.begin(115200);
-    Serial.println("start");
-    watch = TTGOClass::getWatch();
-    esp_reset_reason_t reason = esp_reset_reason();
-    Serial.printf("Reset reason: %d\n", reason);
-    eventGroupHandle = xEventGroupCreate();
-
     logger = new SerialLogger();
     logger->SetLogLevel(Trace);
+
+    logger->LogTrace("Setup started");
+    watch = TTGOClass::getWatch();
+    eventGroupHandle = xEventGroupCreate();
+
     watch->begin();
     watch->openBL();
     watch->tft->fillRect(0, 0, TFT_WIDTH, TFT_HEIGHT, WHITE);
     SetupPower();
     SetupBMA();
+    sleepState = SleepState_Awake;
+    logger->LogTrace("Setup complete");
 }
-bool isAsleep = false;
-int period = 1000;
-unsigned long lastTime = 0;
+
 void loop()
 {
-    if (isAsleep)
-    {
-        Wake();
-    }
+    HandleAwake();
     EventBits_t bits;
 
     bits = xEventGroupWaitBits(
@@ -47,7 +41,7 @@ void loop()
     {
         HandlePowerInterupts();
         xEventGroupClearBits(eventGroupHandle, IRQ_POWER_FLAG);
-        Serial.println("power");
+        logger->LogTrace("power");
         watch->power->clearIRQ();
     }
 
@@ -55,40 +49,51 @@ void loop()
     {
         HandleBMAInterupts();
         xEventGroupClearBits(eventGroupHandle, IRQ_BMA_FLAG);
-        Serial.println("BMA");
+        logger->LogTrace("BMA");
     }
     xEventGroupClearBits(eventGroupHandle, 0xFF);
     if (millis() >= lastTime + period)
     {
         lastTime = millis();
-        Serial.println("Loop");
+        logger->LogTrace("Loop");
     }
 }
 
 void Sleepmode()
 {
-    Serial.println("Sleeping");
+    logger->LogTrace("Light Sleep");
     Serial.flush();
-    isAsleep = true;
+    sleepState = SleepState_LightSleep;
     watch->displaySleep();
     watch->powerOff();
     watch->bl->off();
     // esp_sleep_enable_ext1_wakeup(GPIO_TOUCH_BMA, ESP_EXT1_WAKEUP_ANY_HIGH); // BMA
     // esp_sleep_enable_ext1_wakeup(GPIO_TOUCH, ESP_EXT1_WAKEUP_ALL_LOW);  // Touch
     // esp_sleep_enable_ext1_wakeup(GPIO_RTC, ESP_EXT1_WAKEUP_ALL_LOW);  // RTC
+    xEventGroupClearBits(eventGroupHandle, 0xFF);
+    watch->power->clearIRQ();
     esp_sleep_enable_ext1_wakeup(GPIO_POWER, ESP_EXT1_WAKEUP_ALL_LOW);
+    esp_sleep_enable_timer_wakeup(silentWakeTime);
     esp_light_sleep_start();
+}
+
+void SilentWake()
+{
+    sleepState = SleepState_SilentAwake;
+    logger->LogTrace("SilentWake");
+    // do periodic checks
+    Serial.flush();
+    Sleepmode();
 }
 
 void Wake()
 {
-    isAsleep = false;
+    sleepState = SleepState_Awake;
     watch->power->clearIRQ();
     watch->displayWakeup();
     watch->setBrightness(255);
     watch->tft->fillRect(0, 0, 240, 240, TFT_RED);
-    Serial.println("Woke");
-    Serial.flush();
+    logger->LogTrace("Woke");
 }
 
 void SetupBMA()
@@ -204,5 +209,25 @@ void HandleBMAInterupts()
         watch->tft->drawString("Step", 0, 180);
         logger->LogTrace("Step");
         watch->shake();
+    }
+}
+
+void HandleAwake()
+{
+    if (sleepState == SleepState_Awake)
+        return;
+
+    esp_sleep_wakeup_cause_t wakeReason = esp_sleep_get_wakeup_cause();
+    switch (wakeReason)
+    {
+    case ESP_SLEEP_WAKEUP_EXT1:
+        Wake();
+        break;
+    case ESP_SLEEP_WAKEUP_TIMER:
+        SilentWake();
+        break;
+    default:
+        logger->LogWarning("Unhandle wake reason");
+        break;
     }
 }
