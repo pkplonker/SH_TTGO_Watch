@@ -8,3 +8,5 @@
 
 #define CPU_FREQ_MIN 80
 #define CPU_FREQ_MAX 240
+
+#define SILENT_WAKE_TIME_SECONDS 30

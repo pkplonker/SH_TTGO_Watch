@@ -16,7 +16,6 @@
 #define IRQ_POWER_FLAG _BV(1)
 #define IRQ_BMA_FLAG _BV(2)
 #define IRQ_TOUCH_FLAG _BV(3)
-#define SILENT_WAKE_TIME_SECONDS 30
 
 enum SleepState
 {
