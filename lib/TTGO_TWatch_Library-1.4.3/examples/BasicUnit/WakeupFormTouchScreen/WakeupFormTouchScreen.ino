@@ -67,6 +67,7 @@ void loop()
 
             // TOUCH SCREEN  Wakeup source
             esp_sleep_enable_ext1_wakeup(GPIO_SEL_38, ESP_EXT1_WAKEUP_ALL_LOW);
+              
             // PEK KEY  Wakeup source
             // esp_sleep_enable_ext1_wakeup(GPIO_SEL_35, ESP_EXT1_WAKEUP_ALL_LOW);
             esp_deep_sleep_start();

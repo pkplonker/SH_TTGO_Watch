@@ -1,7 +1,7 @@
-/*
- * WakeupFormPEKKey: Use AXP202 interrupt pin to wake up T-Watch
- * Copyright 2020 Lewis he
- */
+#define GPIO_POWER ((uint64_t)1 << 35)
+#define GPIO_RTC ((uint64_t)1 << 37)
+#define GPIO_TOUCH ((uint64_t)1 << 38)
+#define GPIO_BMA ((uint64_t)1 << 39)
 
 #include "config.h"
 
@@ -20,8 +20,6 @@ void setup()
     watch->begin();
     watch->openBL();
 
-
-
     watch->power->clearIRQ();
     watch->openBL();
     watch->setBrightness(255);
@@ -33,7 +31,7 @@ void setup()
         FALLING);
 
     watch->power->enableIRQ(AXP202_PEK_SHORTPRESS_IRQ,
-                     true);
+                            true);
     watch->power->clearIRQ();
 }
 bool isAsleep = false;
@@ -66,9 +64,10 @@ void Sleepmode()
     watch->displaySleep();
     watch->powerOff();
     watch->bl->off();
-    // esp_sleep_enable_ext1_wakeup(GPIO_SEL_35, ESP_EXT1_WAKEUP_ALL_LOW);
-    esp_sleep_enable_ext1_wakeup((gpio_num_t)AXP202_INT, ESP_EXT1_WAKEUP_ALL_LOW);
-    esp_sleep_enable_ext1_wakeup((gpio_num_t)BMA423_INT1, ESP_EXT1_WAKEUP_ALL_LOW);
+    // esp_sleep_enable_ext1_wakeup(GPIO_TOUCH_BMA, ESP_EXT1_WAKEUP_ANY_HIGH); // BMA
+    // esp_sleep_enable_ext1_wakeup(GPIO_TOUCH, ESP_EXT1_WAKEUP_ALL_LOW);  // Touch
+    // esp_sleep_enable_ext1_wakeup(GPIO_RTC, ESP_EXT1_WAKEUP_ALL_LOW);  // RTC
+    esp_sleep_enable_ext1_wakeup(GPIO_POWER, ESP_EXT1_WAKEUP_ALL_LOW);
 
     esp_light_sleep_start();
 }
