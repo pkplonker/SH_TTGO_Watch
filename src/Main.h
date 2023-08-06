@@ -13,3 +13,6 @@
 #include "Graphics/TFTHelper.h"
 #include "Core/SerialLogger.h"
 #include "Screens/TestScreen.h"
+
+#define CPU_FREQ_MIN 80
+#define CPU_FREQ_MAX 240
