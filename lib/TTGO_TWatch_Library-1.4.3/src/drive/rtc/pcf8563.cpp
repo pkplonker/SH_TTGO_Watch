@@ -451,3 +451,4 @@ bool RTC_Date::operator==(RTC_Date d)
 {
     return ((d.year == year) && (d.month == month) && (d.day == day) && (d.hour == hour) &&  (d.minute == minute));
 }
+

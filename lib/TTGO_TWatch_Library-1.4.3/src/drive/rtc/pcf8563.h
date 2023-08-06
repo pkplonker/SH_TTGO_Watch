@@ -107,6 +107,8 @@ public:
     uint8_t minute;
     uint8_t second;
     bool operator==(RTC_Date d);
+    RTC_Date operator-(RTC_Date d);
+
 private:
     uint8_t StringToUint8(const char *pString);
 };

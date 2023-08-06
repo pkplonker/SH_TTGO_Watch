@@ -23,44 +23,57 @@ void setup()
     SetupBMA();
     sleepState = SleepState_Awake;
     watch->rtc->check();
+    lastInteraction = millis();
     logger->LogTrace("Setup complete");
 }
 
 void loop()
 {
     HandleAwake();
-    EventBits_t bits;
 
-    bits = xEventGroupWaitBits(
+    EventBits_t bits = xEventGroupWaitBits(
         eventGroupHandle,
         IRQ_POWER_FLAG | IRQ_BMA_FLAG,
         pdTRUE,
         pdFALSE,
         xMaxWait);
 
-    if ((bits & IRQ_POWER_FLAG) == IRQ_POWER_FLAG)
+    if (bits)
     {
-        HandlePowerInterupts();
-        xEventGroupClearBits(eventGroupHandle, IRQ_POWER_FLAG);
-        logger->LogTrace("power");
-        watch->power->clearIRQ();
+        if ((bits & IRQ_POWER_FLAG) == IRQ_POWER_FLAG)
+        {
+            HandlePowerInterupts();
+            xEventGroupClearBits(eventGroupHandle, IRQ_POWER_FLAG);
+            logger->LogTrace("power");
+            watch->power->clearIRQ();
+        }
+        if ((bits & IRQ_BMA_FLAG) == IRQ_BMA_FLAG)
+        {
+            HandleBMAInterupts();
+            xEventGroupClearBits(eventGroupHandle, IRQ_BMA_FLAG);
+            logger->LogTrace("BMA");
+        }
+        xEventGroupClearBits(eventGroupHandle, 0xFF);
+        if (millis() >= lastTime + period)
+        {
+            lastTime = millis();
+            logger->LogTrace("Loop");
+        }
+        lastInteraction = millis();
     }
 
-    if ((bits & IRQ_BMA_FLAG) == IRQ_BMA_FLAG)
+    if (millis() - lastInteraction > SCREEN_ACTIVE_TIME)
     {
-        HandleBMAInterupts();
-        xEventGroupClearBits(eventGroupHandle, IRQ_BMA_FLAG);
-        logger->LogTrace("BMA");
-    }
-    xEventGroupClearBits(eventGroupHandle, 0xFF);
-    if (millis() >= lastTime + period)
-    {
-        lastTime = millis();
-        logger->LogTrace("Loop");
+        DisplayTimeout();
     }
 }
+void DisplayTimeout()
+{
+    logger->LogTrace("Screen time out");
+    SetLightSleep();
+}
 
-void Sleepmode()
+void SetLightSleep()
 {
     logger->LogTrace("Light Sleep");
     Serial.flush();
@@ -80,17 +93,17 @@ void Sleepmode()
     esp_light_sleep_start();
 }
 
-void SilentWake()
+void SetSilentWake()
 {
     sleepState = SleepState_SilentAwake;
     logger->LogTrace("SilentWake");
     logger->LogTrace(watch->rtc->formatDateTime(PCF_TIMEFORMAT_HM));
     // do periodic checks
     Serial.flush();
-    Sleepmode();
+    SetLightSleep();
 }
 
-void Wake()
+void SetWake()
 {
     sleepState = SleepState_Awake;
     setCpuFrequencyMhz(CPU_FREQ_MAX);
@@ -178,7 +191,7 @@ void HandlePowerInterupts()
         watch->tft->drawString("PowerKey Press Long", 0, 80);
         logger->LogTrace("LongPress");
         watch->power->clearIRQ();
-        Sleepmode();
+        SetLightSleep();
     }
     else if (watch->power->isPEKShortPressIRQ())
     {
@@ -222,15 +235,16 @@ void HandleAwake()
 {
     if (sleepState == SleepState_Awake)
         return;
+    lastInteraction = millis();
 
     esp_sleep_wakeup_cause_t wakeReason = esp_sleep_get_wakeup_cause();
     switch (wakeReason)
     {
     case ESP_SLEEP_WAKEUP_EXT1:
-        Wake();
+        SetWake();
         break;
     case ESP_SLEEP_WAKEUP_TIMER:
-        SilentWake();
+        SetSilentWake();
         break;
     default:
         logger->LogWarning("Unhandle wake reason");

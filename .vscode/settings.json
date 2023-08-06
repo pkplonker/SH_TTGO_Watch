@@ -1,6 +1,7 @@
 {
     "cmake.configureOnOpen": true,
     "files.associations": {
+        "*.h": "cpp",
         "string_view": "cpp",
         "array": "cpp",
         "deque": "cpp",
@@ -9,6 +10,7 @@
         "unordered_map": "cpp",
         "unordered_set": "cpp",
         "vector": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "new": "cpp"
     }
 }

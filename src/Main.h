@@ -30,17 +30,18 @@ const uint64_t silentWakeTime = SILENT_WAKE_TIME_SECONDS * 1000000;
 TTGOClass *watch;
 EventGroupHandle_t eventGroupHandle;
 SerialLogger *logger = nullptr;
-
+unsigned long lastInteraction;
 int period = 1000;
 unsigned long lastTime = 0;
 SleepState sleepState;
 
-void Sleepmode();
-void Wake();
+void SetLightSleep();
+void SetWake();
 void SetupPower();
 void SetupBMA();
 void HandlePowerInterupts();
 void HandleBMAInterupts();
-void SilentWake();
+void SetSilentWake();
 void HandleAwake();
+void DisplayTimeout();
 
