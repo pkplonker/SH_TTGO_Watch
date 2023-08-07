@@ -24,6 +24,9 @@ void setup()
     sleepState = SleepState_Awake;
     watch->rtc->check();
     lastInteraction = millis();
+    watch->power->setChargeControlCur(1800);
+    Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
+    Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
     logger->LogTrace("Setup complete");
 }
 
@@ -57,7 +60,8 @@ void loop()
         if (millis() >= lastTime + period)
         {
             lastTime = millis();
-            logger->LogTrace("Loop");
+            Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
+    Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
         }
         lastInteraction = millis();
     }
@@ -70,6 +74,9 @@ void loop()
 void DisplayTimeout()
 {
     logger->LogTrace("Screen time out");
+    Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
+    Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
+
     SetLightSleep();
 }
 
