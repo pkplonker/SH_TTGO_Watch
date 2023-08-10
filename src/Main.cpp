@@ -1,9 +1,4 @@
 #include "Main.h"
-#define GPIO_POWER ((uint64_t)1 << 35)
-#define GPIO_RTC ((uint64_t)1 << 37)
-#define GPIO_TOUCH ((uint64_t)1 << 38)
-#define GPIO_BMA ((uint64_t)1 << 39)
-
 #include "config.h"
 
 void setup()
@@ -24,16 +19,58 @@ void setup()
     sleepState = SleepState_Awake;
     watch->rtc->check();
     lastInteraction = millis();
-    watch->power->setChargeControlCur(1800);
+    watch->power->setChargeControlCur(POWER_CHARGE_CURRENT);
     Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
     Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
+    Serial.println("Battery charge current: " + String(watch->power->getBattChargeCurrent()));
+
+    InitBT();
     logger->LogTrace("Setup complete");
+}
+
+void InitBT()
+{
+
+    // Initialize BLE and set device name
+    NimBLEDevice::init(BT_NAME);
+    NimBLEServer *btServer = NimBLEDevice::createServer();
+
+    // Create a BLE service
+    NimBLEService *btService = btServer->createService(SERVICE_UUID);
+
+    // Create a writable BLE characteristic
+    messageChar = btService->createCharacteristic(
+        MESSAGE_UUID,
+        NIMBLE_PROPERTY::READ 
+            );
+    batteryPercentChar = btService->createCharacteristic(
+        BATTERY_PERCENTAGE_UUID,
+        NIMBLE_PROPERTY::READ);
+
+    messageChar->setCallbacks(new MyCallbacks());
+    batteryPercentChar->setCallbacks(new MyCallbacks());
+
+    // Start the service
+    btService->start();
+
+    // Start advertising
+    NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(btService->getUUID());
+    pAdvertising->start();
+
+    Serial.println("Waiting for clients to connect...");
 }
 
 void loop()
 {
     HandleAwake();
-
+    if (NimBLEDevice::getServer()->getConnectedCount() > 0)
+    {
+        messageChar->setValue(millis());
+        messageChar->notify();
+        batteryPercentChar->setValue(watch->power->getBattPercentage());
+        batteryPercentChar->notify();
+    }
     EventBits_t bits = xEventGroupWaitBits(
         eventGroupHandle,
         IRQ_POWER_FLAG | IRQ_BMA_FLAG,
@@ -61,7 +98,8 @@ void loop()
         {
             lastTime = millis();
             Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
-    Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
+            Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
+            Serial.println("Battery charge current: " + String(watch->power->getBattChargeCurrent()));
         }
         lastInteraction = millis();
     }
@@ -73,11 +111,13 @@ void loop()
 }
 void DisplayTimeout()
 {
+#if SCREEN_ACTIVE_TIMEOUT_ENABLED
     logger->LogTrace("Screen time out");
     Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
     Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
-
+    Serial.println("Battery charge current: " + String(watch->power->getBattChargeCurrent()));
     SetLightSleep();
+#endif
 }
 
 void SetLightSleep()
@@ -96,7 +136,9 @@ void SetLightSleep()
     xEventGroupClearBits(eventGroupHandle, 0xFF);
     watch->power->clearIRQ();
     esp_sleep_enable_ext1_wakeup(GPIO_POWER, ESP_EXT1_WAKEUP_ALL_LOW);
+#ifdef SILENT_WAKE_ENABLE
     esp_sleep_enable_timer_wakeup(silentWakeTime);
+#endif
     esp_light_sleep_start();
 }
 

@@ -1,5 +1,5 @@
-#define LILYGO_WATCH_2020_V1    
-#define LILYGO_WATCH_LVGL     
+#define LILYGO_WATCH_2020_V1
+#define LILYGO_WATCH_LVGL
 
 #include <LilyGoWatch.h>
 
@@ -11,4 +11,9 @@
 
 #define SILENT_WAKE_TIME_SECONDS 30
 #define SCREEN_ACTIVE_TIME 15000
+#define SCREEN_ACTIVE_TIMEOUT_ENABLED false
 
+#define SILENT_WAKE_ENABLE false
+#define BT_NAME "SH TTGO WATCH"
+
+#define POWER_CHARGE_CURRENT 500
