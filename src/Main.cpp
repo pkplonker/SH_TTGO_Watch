@@ -41,14 +41,16 @@ void InitBT()
     // Create a writable BLE characteristic
     messageChar = btService->createCharacteristic(
         MESSAGE_UUID,
-        NIMBLE_PROPERTY::READ 
-            );
+        NIMBLE_PROPERTY::READ |
+            NIMBLE_PROPERTY::NOTIFY);
     batteryPercentChar = btService->createCharacteristic(
         BATTERY_PERCENTAGE_UUID,
-        NIMBLE_PROPERTY::READ);
-
-    messageChar->setCallbacks(new MyCallbacks());
-    batteryPercentChar->setCallbacks(new MyCallbacks());
+        NIMBLE_PROPERTY::READ |
+            NIMBLE_PROPERTY::NOTIFY);
+    stepsChar = btService->createCharacteristic(
+        STEPS_UUID,
+        NIMBLE_PROPERTY::READ |
+            NIMBLE_PROPERTY::NOTIFY);
 
     // Start the service
     btService->start();
@@ -66,10 +68,21 @@ void loop()
     HandleAwake();
     if (NimBLEDevice::getServer()->getConnectedCount() > 0)
     {
-        messageChar->setValue(millis());
+        logger->LogTrace("notifying");
+        auto x = "First data " + (String)millis();
+        auto y = "Second data " + (String)millis();
+
+        messageChar->setValue(x);
         messageChar->notify();
-        batteryPercentChar->setValue(watch->power->getBattPercentage());
+        batteryPercentChar->setValue(y);
         batteryPercentChar->notify();
+        stepsChar->setValue((String)steps);
+        stepsChar->notify();
+        logger->Log((String)steps);
+    }
+    else
+    {
+        Serial.println("Waiting for clients to connect...");
     }
     EventBits_t bits = xEventGroupWaitBits(
         eventGroupHandle,
@@ -277,6 +290,7 @@ void HandleBMAInterupts()
         watch->tft->drawString("Step", 0, 180);
         logger->LogTrace("Step");
         watch->shake();
+        steps++;
     }
 }
 

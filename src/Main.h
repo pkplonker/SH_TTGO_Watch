@@ -18,6 +18,7 @@
 #define IRQ_POWER_FLAG _BV(1)
 #define IRQ_BMA_FLAG _BV(2)
 #define IRQ_TOUCH_FLAG _BV(3)
+#define IRQ_STEP_FLAG _BV(4)
 
 #define GPIO_POWER ((uint64_t)1 << 35)
 #define GPIO_RTC ((uint64_t)1 << 37)
@@ -28,6 +29,11 @@
 
 #define MESSAGE_UUID "e9c2e910-a206-4d9e-a2d4-49834e1ec45a"
 #define BATTERY_PERCENTAGE_UUID "e9c2e910-a206-4d9e-a2d4-49834e1ec45b"
+#define STEPS_UUID "e9c2e910-a206-4d9e-a2d4-49834e1ec45c"
+
+NimBLECharacteristic *messageChar;
+NimBLECharacteristic *batteryPercentChar;
+NimBLECharacteristic *stepsChar;
 
 enum SleepState
 {
@@ -46,8 +52,7 @@ unsigned long lastInteraction;
 int period = 1000;
 unsigned long lastTime = 0;
 SleepState sleepState;
-NimBLECharacteristic *messageChar;
-NimBLECharacteristic *batteryPercentChar;
+int steps = 0;
 
 void SetLightSleep();
 void SetWake();
