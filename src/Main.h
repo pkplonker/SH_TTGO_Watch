@@ -32,7 +32,7 @@
 #define STEPS_UUID "e9c2e910-a206-4d9e-a2d4-49834e1ec45c"
 
 NimBLECharacteristic *messageChar;
-NimBLECharacteristic *batteryPercentChar;
+NimBLECharacteristic *batteryChar;
 NimBLECharacteristic *stepsChar;
 
 enum SleepState
@@ -64,6 +64,7 @@ void SetSilentWake();
 void HandleAwake();
 void DisplayTimeout();
 void InitBT();
+void SendBatteryData();
 
 class MyCallbacks : public NimBLECharacteristicCallbacks
 {
@@ -77,3 +78,29 @@ class MyCallbacks : public NimBLECharacteristicCallbacks
         }
     }
 };
+
+class BTServerCallbacks : public NimBLEServerCallbacks {
+    void onConnect(NimBLEServer* pServer) {
+        Serial.println("Client connected");
+    };
+
+    void onDisconnect(NimBLEServer* pServer) {
+        Serial.println("Client disconnected");
+    };
+};
+
+#pragma pack(push, 1)
+struct BatteryData {
+  bool isCharging;
+  bool isBatteryConnected;
+  float acinVoltage;
+  float acinCurrent;
+  float vbusVoltage;
+  float vbusCurrent;
+  float temp;
+  float battVoltage;
+  float battChargeCurrent;
+  float battDischargeCurrent;
+  int batteryPercentage;
+};
+#pragma pack(pop)

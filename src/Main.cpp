@@ -23,11 +23,12 @@ void setup()
     Serial.println("Battery percentage: " + String(watch->power->getBattPercentage()));
     Serial.println("Battery discharge current: " + String(watch->power->getBattDischargeCurrent()));
     Serial.println("Battery charge current: " + String(watch->power->getBattChargeCurrent()));
-
     InitBT();
     logger->LogTrace("Setup complete");
 }
-
+void IRAM_ATTR onTimerInterrupt() {
+    logger->Log("Test");
+}
 void InitBT()
 {
 
@@ -43,7 +44,7 @@ void InitBT()
         MESSAGE_UUID,
         NIMBLE_PROPERTY::READ |
             NIMBLE_PROPERTY::NOTIFY);
-    batteryPercentChar = btService->createCharacteristic(
+    batteryChar = btService->createCharacteristic(
         BATTERY_PERCENTAGE_UUID,
         NIMBLE_PROPERTY::READ |
             NIMBLE_PROPERTY::NOTIFY);
@@ -61,6 +62,7 @@ void InitBT()
     pAdvertising->start();
 
     Serial.println("Waiting for clients to connect...");
+    btServer->setCallbacks(new BTServerCallbacks());
 }
 
 void loop()
@@ -68,21 +70,12 @@ void loop()
     HandleAwake();
     if (NimBLEDevice::getServer()->getConnectedCount() > 0)
     {
-        logger->LogTrace("notifying");
-        auto x = "First data " + (String)millis();
-        auto y = "Second data " + (String)millis();
-
-        messageChar->setValue(x);
+        //logger->LogTrace("notifying");
+        messageChar->setValue((String)millis());
         messageChar->notify();
-        batteryPercentChar->setValue(y);
-        batteryPercentChar->notify();
         stepsChar->setValue((String)steps);
         stepsChar->notify();
-        logger->Log((String)steps);
-    }
-    else
-    {
-        Serial.println("Waiting for clients to connect...");
+        SendBatteryData();
     }
     EventBits_t bits = xEventGroupWaitBits(
         eventGroupHandle,
@@ -122,6 +115,58 @@ void loop()
         DisplayTimeout();
     }
 }
+
+void SendBatteryData() {
+  // Fill the structure
+  BatteryData data;
+  auto power = watch->power;
+  data.isCharging = power->isChargeing();
+  data.isBatteryConnected = power->isBatteryConnect();
+  data.acinVoltage = power->getAcinVoltage();
+  data.acinCurrent = power->getAcinCurrent();
+  data.vbusVoltage = power->getVbusVoltage();
+  data.vbusCurrent = power->getVbusCurrent();
+  data.temp = power->getTemp();
+  data.battVoltage = power->getBattVoltage();
+  data.battChargeCurrent = power->getBattChargeCurrent();
+  data.battDischargeCurrent = power->getBattDischargeCurrent();
+  data.battDischargeCurrent = power->getBattPercentage();
+
+//   logger->Log("Charging: " + String(data.isCharging));
+//   logger->Log("Battery Connected: " + String(data.isBatteryConnected));
+//   logger->Log("ACIN Voltage: " + String(data.acinVoltage));
+//   logger->Log("ACIN Current: " + String(data.acinCurrent));
+//   logger->Log("VBUS Voltage: " + String(data.vbusVoltage));
+//   logger->Log("VBUS Current: " + String(data.vbusCurrent));
+//   logger->Log("Temperature: " + String(data.temp));
+//   logger->Log("Battery Voltage: " + String(data.battVoltage));
+//   logger->Log("Battery Charge Current: " + String(data.battChargeCurrent));
+//   logger->Log("Battery Discharge Current: " + String(data.battDischargeCurrent));
+//   logger->Log("Battery %: " + String(data.batteryPercentage));
+
+logger->Log(String("Size of BatteryData: ") + sizeof(data));
+  logger->Log(String("Offset of isCharging: ") + offsetof(BatteryData, isCharging));
+  logger->Log(String("Offset of isBatteryConnected: ") + offsetof(BatteryData, isBatteryConnected));
+  logger->Log(String("Offset of acinVoltage: ") + offsetof(BatteryData, acinVoltage));
+  logger->Log(String("Offset of acinCurrent: ") + offsetof(BatteryData, acinCurrent));
+  logger->Log(String("Offset of vbusVoltage: ") + offsetof(BatteryData, vbusVoltage));
+  logger->Log(String("Offset of vbusCurrent: ") + offsetof(BatteryData, vbusCurrent));
+  logger->Log(String("Offset of temp: ") + offsetof(BatteryData, temp));
+  logger->Log(String("Offset of battVoltage: ") + offsetof(BatteryData, battVoltage));
+  logger->Log(String("Offset of battChargeCurrent: ") + offsetof(BatteryData, battChargeCurrent));
+  logger->Log(String("Offset of battDischargeCurrent: ") + offsetof(BatteryData, battDischargeCurrent));
+  logger->Log(String("Offset of batteryPercentage: ") + offsetof(BatteryData, batteryPercentage));
+
+  uint8_t dataBytes[sizeof(data)];
+  memcpy(dataBytes, &data, sizeof(data));
+  logger->Log(String("Size of bool: ") + sizeof(bool));
+    logger->Log(String("Size of float: ") + sizeof(float));
+    logger->Log(String("Size of int: ") + sizeof(int));
+    logger->Log(String("Size of BatteryData: ") + sizeof(BatteryData));
+  batteryChar->setValue(dataBytes, sizeof(data));
+  batteryChar->notify();
+}
+
 void DisplayTimeout()
 {
 #if SCREEN_ACTIVE_TIMEOUT_ENABLED
@@ -140,6 +185,7 @@ void SetLightSleep()
     sleepState = SleepState_LightSleep;
     watch->displaySleep();
     watch->powerOff();
+    watch->setBrightness(0);
     watch->bl->off();
     setCpuFrequencyMhz(CPU_FREQ_MIN);
 
@@ -234,7 +280,9 @@ void SetupPower()
     watch->power->setPowerOutPut(AXP202_LDO3, AXP202_OFF);
     watch->power->setPowerOutPut(AXP202_LDO4, AXP202_OFF);
 
-    watch->power->adc1Enable(AXP202_VBUS_VOL_ADC1 | AXP202_VBUS_CUR_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_BATT_VOL_ADC1, true);
+    watch->power->adc1Enable(AXP202_BATT_VOL_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_ACIN_VOL_ADC1 | AXP202_ACIN_CUR_ADC1 |
+    AXP202_VBUS_VOL_ADC1 | AXP202_VBUS_CUR_ADC1 | AXP202_APS_VOL_ADC1 | AXP202_TS_PIN_ADC1, true);
+    watch->power->adc2Enable(AXP202_TEMP_MONITORING_ADC2 | AXP202_GPIO1_FUNC_ADC2 | AXP202_GPIO0_FUNC_ADC2, true);
 
     watch->power->enableIRQ(AXP202_ALL_IRQ, false);
     watch->power->enableIRQ(AXP202_PEK_SHORTPRESS_IRQ | AXP202_PEK_LONGPRESS_IRQ, true);
