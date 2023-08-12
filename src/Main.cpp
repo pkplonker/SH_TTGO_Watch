@@ -67,6 +67,7 @@ void InitBT()
 
 void loop()
 {
+    watch->tft->fillSmoothRoundRect(50, 50, 100, 100, 10, TFT_RED, TFT_WHITE);
     HandleAwake();
     if (NimBLEDevice::getServer()->getConnectedCount() > 0)
     {
