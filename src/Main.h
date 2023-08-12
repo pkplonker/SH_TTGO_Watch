@@ -91,16 +91,9 @@ class BTServerCallbacks : public NimBLEServerCallbacks {
 
 #pragma pack(push, 1)
 struct BatteryData {
-  bool isCharging;
-  bool isBatteryConnected;
-  float acinVoltage;
-  float acinCurrent;
-  float vbusVoltage;
-  float vbusCurrent;
-  float temp;
-  float battVoltage;
-  float battChargeCurrent;
-  float battDischargeCurrent;
-  int batteryPercentage;
+  bool isCharging; //1
+  float battChargeCurrent; //4
+  float battDischargeCurrent; //4
+  int batteryPercentage; //4
 };
 #pragma pack(pop)

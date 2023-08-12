@@ -121,50 +121,26 @@ void SendBatteryData() {
   BatteryData data;
   auto power = watch->power;
   data.isCharging = power->isChargeing();
-  data.isBatteryConnected = power->isBatteryConnect();
-  data.acinVoltage = power->getAcinVoltage();
-  data.acinCurrent = power->getAcinCurrent();
-  data.vbusVoltage = power->getVbusVoltage();
-  data.vbusCurrent = power->getVbusCurrent();
-  data.temp = power->getTemp();
-  data.battVoltage = power->getBattVoltage();
   data.battChargeCurrent = power->getBattChargeCurrent();
   data.battDischargeCurrent = power->getBattDischargeCurrent();
-  data.battDischargeCurrent = power->getBattPercentage();
-
-//   logger->Log("Charging: " + String(data.isCharging));
-//   logger->Log("Battery Connected: " + String(data.isBatteryConnected));
-//   logger->Log("ACIN Voltage: " + String(data.acinVoltage));
-//   logger->Log("ACIN Current: " + String(data.acinCurrent));
-//   logger->Log("VBUS Voltage: " + String(data.vbusVoltage));
-//   logger->Log("VBUS Current: " + String(data.vbusCurrent));
-//   logger->Log("Temperature: " + String(data.temp));
-//   logger->Log("Battery Voltage: " + String(data.battVoltage));
-//   logger->Log("Battery Charge Current: " + String(data.battChargeCurrent));
-//   logger->Log("Battery Discharge Current: " + String(data.battDischargeCurrent));
-//   logger->Log("Battery %: " + String(data.batteryPercentage));
-
-logger->Log(String("Size of BatteryData: ") + sizeof(data));
-  logger->Log(String("Offset of isCharging: ") + offsetof(BatteryData, isCharging));
-  logger->Log(String("Offset of isBatteryConnected: ") + offsetof(BatteryData, isBatteryConnected));
-  logger->Log(String("Offset of acinVoltage: ") + offsetof(BatteryData, acinVoltage));
-  logger->Log(String("Offset of acinCurrent: ") + offsetof(BatteryData, acinCurrent));
-  logger->Log(String("Offset of vbusVoltage: ") + offsetof(BatteryData, vbusVoltage));
-  logger->Log(String("Offset of vbusCurrent: ") + offsetof(BatteryData, vbusCurrent));
-  logger->Log(String("Offset of temp: ") + offsetof(BatteryData, temp));
-  logger->Log(String("Offset of battVoltage: ") + offsetof(BatteryData, battVoltage));
-  logger->Log(String("Offset of battChargeCurrent: ") + offsetof(BatteryData, battChargeCurrent));
-  logger->Log(String("Offset of battDischargeCurrent: ") + offsetof(BatteryData, battDischargeCurrent));
-  logger->Log(String("Offset of batteryPercentage: ") + offsetof(BatteryData, batteryPercentage));
-
+  data.batteryPercentage = power->getBattPercentage();
+  logger->Log(String("isCharging: ") + (data.isCharging ? "true" : "false"));
+  logger->Log(String("battChargeCurrent: ") + data.battChargeCurrent);
+  logger->Log(String("battDischargeCurrent: ") + data.battDischargeCurrent);
+  logger->Log(String("batteryPercentage: ") + data.batteryPercentage);
   uint8_t dataBytes[sizeof(data)];
-  memcpy(dataBytes, &data, sizeof(data));
-  logger->Log(String("Size of bool: ") + sizeof(bool));
-    logger->Log(String("Size of float: ") + sizeof(float));
-    logger->Log(String("Size of int: ") + sizeof(int));
-    logger->Log(String("Size of BatteryData: ") + sizeof(BatteryData));
-  batteryChar->setValue(dataBytes, sizeof(data));
-  batteryChar->notify();
+    memcpy(dataBytes, &data, sizeof(data)); 
+
+    char hexString[2 * sizeof(dataBytes) + 1]; 
+
+    for (size_t i = 0; i < sizeof(dataBytes); i++) {
+        sprintf(&hexString[2 * i], "%02x", dataBytes[i]);
+    }
+
+    hexString[2 * sizeof(dataBytes)] = '\0';
+    Serial.println(hexString);
+    batteryChar->setValue(dataBytes, sizeof(data));
+    batteryChar->notify();
 }
 
 void DisplayTimeout()
@@ -282,7 +258,6 @@ void SetupPower()
 
     watch->power->adc1Enable(AXP202_BATT_VOL_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_ACIN_VOL_ADC1 | AXP202_ACIN_CUR_ADC1 |
     AXP202_VBUS_VOL_ADC1 | AXP202_VBUS_CUR_ADC1 | AXP202_APS_VOL_ADC1 | AXP202_TS_PIN_ADC1, true);
-    watch->power->adc2Enable(AXP202_TEMP_MONITORING_ADC2 | AXP202_GPIO1_FUNC_ADC2 | AXP202_GPIO0_FUNC_ADC2, true);
 
     watch->power->enableIRQ(AXP202_ALL_IRQ, false);
     watch->power->enableIRQ(AXP202_PEK_SHORTPRESS_IRQ | AXP202_PEK_LONGPRESS_IRQ, true);
