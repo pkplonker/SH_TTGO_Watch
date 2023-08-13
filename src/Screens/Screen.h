@@ -4,6 +4,8 @@
 #include "Config.h"
 #include "Core/Logger.h"
 #include "../../TTGO_TWatch_Library-1.4.3/src/lvgl/lvgl.h"
+#include "../Core/InteractionState.h"
+
 class Screen
 {
 
