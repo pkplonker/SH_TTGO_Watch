@@ -2,6 +2,7 @@
 
 TestScreen::TestScreen(TTGOClass *watch, Logger *logger) : Screen(watch, logger)
 {
+    
 }
 
 
