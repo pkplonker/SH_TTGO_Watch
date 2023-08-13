@@ -19,9 +19,8 @@ class BTHandler : public HandlerBase
 {
 public:
     BTHandler(TTGOClass *watch, Logger *logger, PowerHandler *powerHandler, BMAHandler *bmaHandler);
-    void InitBT();
+    
     virtual void Loop() override;
-    void SendBatteryData();
 
 private:
     NimBLECharacteristic *messageChar = nullptr;
@@ -29,6 +28,9 @@ private:
     NimBLECharacteristic *stepsChar = nullptr;
     PowerHandler *powerHandler = nullptr;
     BMAHandler *bmaHandler = nullptr;
+
+    void InitBT();
+    void SendBatteryData();
 
     class BTServerCallbacks : public NimBLEServerCallbacks
     {

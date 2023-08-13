@@ -1,9 +1,9 @@
 #pragma once
 #include <Arduino.h>
-#include "LilyGoWatch.h"
+#include <LilyGoWatch.h>
 #include "Config.h"
 #include "Core/Logger.h"
-
+#include "../../TTGO_TWatch_Library-1.4.3/src/lvgl/lvgl.h"
 class Screen
 {
 

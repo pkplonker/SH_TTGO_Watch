@@ -1,6 +1,5 @@
 #include "PowerHandler.h"
 
-
 void PowerHandler::Loop()
 {
     HandleAwake();
@@ -74,7 +73,7 @@ void PowerHandler::SetLightSleep()
     watch->setBrightness(0);
     watch->bl->off();
     setCpuFrequencyMhz(CPU_FREQ_MIN);
-
+    watch->motor->adjust(0);
     // esp_sleep_enable_ext1_wakeup(GPIO_TOUCH_BMA, ESP_EXT1_WAKEUP_ANY_HIGH); // BMA
     // esp_sleep_enable_ext1_wakeup(GPIO_TOUCH, ESP_EXT1_WAKEUP_ALL_LOW);  // Touch
     // esp_sleep_enable_ext1_wakeup(GPIO_RTC, ESP_EXT1_WAKEUP_ALL_LOW);  // RTC
@@ -101,7 +100,6 @@ void PowerHandler::SetWake()
 {
     sleepState = SleepState_Awake;
     setCpuFrequencyMhz(CPU_FREQ_MAX);
-
     watch->power->clearIRQ();
     watch->displayWakeup();
     watch->setBrightness(255);
@@ -124,7 +122,7 @@ void PowerHandler::HandleAwake()
         SetSilentWake();
         break;
     default:
-        logger->LogWarning("Unhandle wake reason");
+        logger->LogWarning("Unhandled wake reason");
         break;
     }
 }

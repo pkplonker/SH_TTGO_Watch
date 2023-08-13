@@ -8,6 +8,8 @@
 #include "Core/BMAHandler.h"
 #include "Core/BTHandler.h"
 #include "Core/InteractionState.h"
+#include "Screens/TestScreen.h"
+
 
 TTGOClass *watch;
 BTHandler *bthandler;

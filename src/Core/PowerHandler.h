@@ -28,7 +28,7 @@ public:
     void HandlePowerInterupts();
 
 private:
-    SleepState sleepState;
+    SleepState sleepState = SleepState_Awake;
     void ISRCallback();
     void SetupPower();
     void HandleAwake();

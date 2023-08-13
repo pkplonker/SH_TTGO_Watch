@@ -1,6 +1,6 @@
 #include "SerialLogger.h"
 
-void SerialLogger::Log(const String& message, LogLevel logLevel)
+void SerialLogger::Log(const String &message, LogLevel logLevel)
 {
     if (loglevel >= this->loglevel)
     {
@@ -8,23 +8,23 @@ void SerialLogger::Log(const String& message, LogLevel logLevel)
     }
 }
 
-void SerialLogger::LogTrace(const String& message)
+void SerialLogger::LogTrace(const String &message)
 {
-    SerialLogger::Log(message, Trace);
+    SerialLogger::Log("TRACE: " + message, Trace);
 }
 
-void SerialLogger::LogError(const String& message)
+void SerialLogger::LogError(const String &message)
 {
-    SerialLogger::Log(message, Error);
+    SerialLogger::Log("ERROR: " + message, Error);
 }
 
-void SerialLogger::LogWarning(const String& message)
+void SerialLogger::LogWarning(const String &message)
 {
-    SerialLogger::Log(message, Error);
+    SerialLogger::Log("WARNING:" + message, Error);
 }
-void SerialLogger::LogCritical(const String& message)
+void SerialLogger::LogCritical(const String &message)
 {
-    SerialLogger::Log(message, Critical);
+    SerialLogger::Log("CRITICAL: " + message, Critical);
 }
 void SerialLogger::SetLogLevel(LogLevel level)
 {
